@@ -1,0 +1,19 @@
+# Node.js dependencies
+node_modules/
+
+# Terraform state
+*.tfstate
+*.tfstate.*
+
+
+# IDE/editor settings
+.vscode/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+.terraform/
