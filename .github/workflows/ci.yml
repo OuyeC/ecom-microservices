@@ -1,0 +1,42 @@
+name: Build & Push Containers
+# run thyis workflow whenever push to services
+# uncomment after set up real AWS account and users
+
+# on:
+#   push:
+#     paths:
+#       - 'services/**'
+#       - '.github/workflows/ci.yml'
+
+# jobs:
+#   build-and-push:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           aws-region: us-east-2
+#           role-to-assume: arn:aws:iam::123456789012:role/your-ci-role
+
+#       - name: Login to ECR
+#         run: |
+#           aws ecr get-login-password --region us-east-2 \
+#             | docker login --username AWS --password-stdin ${{ secrets.ECR_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com
+
+#       - name: Build & Push All Services
+#         run: |
+#           for svc in auth catalog cart order payment notification; do
+#             cd services/$svc
+#             docker build -t ${{ secrets.ECR_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/${svc}-service:latest .
+#             docker push ${{ secrets.ECR_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/${svc}-service:latest
+#             cd ../../
+#           done
+
+#       - name: Terraform fmt & validate
+#         working-directory: infrastructure
+#         run: |
+#           terraform fmt -check
+#           terraform init -backend-config="bucket=oc-my-tf-state" -backend-config="region=us-east-2"
+#           terraform validate

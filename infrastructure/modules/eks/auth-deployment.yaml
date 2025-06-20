@@ -1,0 +1,33 @@
+# kubernets PAI group and version
+apiVersion: apps/v1
+
+kind: Deployment
+
+metadata:
+  name: auth
+
+# desired state
+spec:
+  # 1 copy of auth 
+  replicas: 1
+  selector:
+  # select pod named auth
+    matchLabels: { app: auth }
+  template:
+    metadata:
+      labels: { app: auth }
+    spec:
+      containers:
+        - name: auth
+          image: <ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/auth-service:latest
+          ports: [ { containerPort: 3000 } ]
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+spec:
+  type: ClusterIP
+  selector: { app: auth }
+  ports: [ { port: 80, targetPort: 3000 } ]

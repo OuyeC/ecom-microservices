@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cart
+  template:
+    metadata:
+      labels:
+        app: cart
+    spec:
+      containers:
+        - name: cart
+          image: <ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/cart-service:latest
+          ports:
+            - containerPort: 3001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart
+spec:
+  type: ClusterIP
+  selector:
+    app: cart
+  ports:
+    - port: 80
+      targetPort: 3001
