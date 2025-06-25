@@ -20,6 +20,22 @@ spec:
       containers:
         - name: auth
           image: <ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/auth-service:latest
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: rds-creds
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rds-creds
+                  key: DB_USER
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: rds-creds
+                  key: DB_PASS
           ports: [ { containerPort: 3000 } ]
 
 ---

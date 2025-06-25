@@ -35,6 +35,11 @@ module "eks" {
 # set up rds
 module "rds" {
   source  = "./modules/rds"
+  db_name              = "ecom"
+  db_username          = "admin"
+  db_password          = "OChen98"
+  subnet_ids           = module.vpc.private_subnets
+  vpc_security_group_id = module.vpc.default_security_group_id
 }
 
 # standalone EC2 VM
