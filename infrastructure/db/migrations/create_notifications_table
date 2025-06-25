@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS notifications (
+  id         VARCHAR(36)   PRIMARY KEY,                    -- UUID
+  user_id    INT           NOT NULL,                       -- FK → users.id
+  message    TEXT          NOT NULL,                       -- Notification content
+  status     VARCHAR(20)   NOT NULL DEFAULT 'QUEUED',      -- QUEUED, SENT, FAILED
+  created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  sent_at    DATETIME      NULL,                           -- When actually sent
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);

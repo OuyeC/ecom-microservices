@@ -16,7 +16,19 @@ spec:
         - name: order
           image: <ACCOUNT_ID>.dkr.ecr.us-east-2.amazonaws.com/order-service:latest
           ports:
-            - containerPort: 3003
+            - containerPort: 3004
+          env:
+            - name: DB_HOST
+              valueFrom: { secretKeyRef: { name: rds-creds, key: DB_HOST } }
+            - name: DB_PORT
+              valueFrom: { secretKeyRef: { name: rds-creds, key: DB_PORT } }
+            - name: DB_USER
+              valueFrom: { secretKeyRef: { name: rds-creds, key: DB_USER } }
+            - name: DB_PASS
+              valueFrom: { secretKeyRef: { name: rds-creds, key: DB_PASS } }
+            - name: DB_NAME
+              valueFrom: { secretKeyRef: { name: rds-creds, key: DB_NAME } }
+
 ---
 apiVersion: v1
 kind: Service

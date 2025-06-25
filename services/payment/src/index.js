@@ -1,60 +1,79 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const { v4: uuidv4 } = require("uuid");
+const mysql      = require('mysql2/promise'); 
 
 const app = express();
 app.use(bodyParser.json());
 
-// In-memory payment records: { paymentId: { id, orderId, amount, status, createdAt } }
-const payments = {};
+const pool = mysql.createPool({                
+  host:     process.env.DB_HOST,
+  port:     process.env.DB_PORT,
+  user:     process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME || 'ecom',
+  waitForConnections: true,
+  connectionLimit:    10,
+});
 
 // Health check
-app.get("/health", (_req, res) => {
-  res.send({ status: "ok" });
+app.get("/health", async(_req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.send({ status: 'ok' });
+  } catch {
+    res.status(500).send({ status: 'db-error' });
+  }
 });
 
 // Initiate a payment for an order
-app.post("/payments", (req, res) => {
+app.post("/payments", async(req, res) => {
   const { orderId, amount } = req.body;
-  if (!orderId || typeof amount !== "number") {
-    return res.status(400).send({ error: "orderId (string) and amount (number) required" });
+  if (!orderId || typeof amount !== 'number') {
+    return res.status(400).send({ error: 'orderId (string) and amount (number) required' });
   }
 
   const id = uuidv4();
-  const newPayment = {
-    id,
-    orderId,
-    amount,
-    status: "PENDING",                     // initial status
-    createdAt: new Date().toISOString()
-  };
+  const status = 'PENDING';
+  const createdAt = new Date().toISOString().slice(0,19).replace('T',' ');
 
-  payments[id] = newPayment;
-
-  // TODO: integrate with a real payment gateway (Stripe, etc.)
-  console.log("Payment initiated:", newPayment);
-
-  res.status(201).send({ payment: newPayment });
+  try {
+    await pool.execute(
+      'INSERT INTO payments (id, order_id, amount, status, created_at) VALUES (?, ?, ?, ?, ?)',
+      [id, orderId, amount, status, createdAt]
+    );
+    res.status(201).send({ payment: { id, orderId, amount, status, createdAt } });
+  } catch (err) {
+    console.error('Payment creation error:', err);
+    res.status(500).send({ error: 'payment_failed' });
+  }
 });
 
 // Get payment status by payment ID
-app.get("/payments/:paymentId", (req, res) => {
-  const payment = payments[req.params.paymentId];
-  if (!payment) {
-    return res.status(404).send({ error: "Payment not found" });
-  }
-  res.send({ payment });
+app.get("/payments/:paymentId", async(req, res) => {
+  const { paymentId } = req.params;
+  const [rows] = await pool.query(
+    'SELECT * FROM payments WHERE id = ?', [paymentId]
+  );
+  if (!rows.length) return res.status(404).send({ error: 'not_found' });
+  res.send({ payment: rows[0] });
 });
 
-// (Optional) Update payment status (e.g. from PENDING → COMPLETED)
-app.patch("/payments/:paymentId/status", (req, res) => {
+// Update payment status (e.g. from PENDING to COMPLETED)
+app.patch("/payments/:paymentId/status", async(req, res) => {
+  const { paymentId } = req.params;
   const { status } = req.body;
-  const payment = payments[req.params.paymentId];
-  if (!payment) {
-    return res.status(404).send({ error: "Payment not found" });
-  }
-  payment.status = status || payment.status;
-  res.send({ payment });
+  if (!status) return res.status(400).send({ error: 'status required' });
+
+  const [result] = await pool.execute(
+    'UPDATE payments SET status = ? WHERE id = ?', [status, paymentId]
+  );
+  if (result.affectedRows === 0) return res.status(404).send({ error: 'not_found' });
+
+  const [rows] = await pool.query(
+    'SELECT * FROM payments WHERE id = ?', [paymentId]
+  );
+  res.send({ payment: rows[0] });
 });
 
 const PORT = process.env.PORT || 3004;
