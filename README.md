@@ -1,6 +1,6 @@
 # E-commerce Microservices Platform
 
-By OC
+**By OC**
 
 A cloud-native, full-stack e-commerce application demonstrating modern microservices design, AWS infrastructure, Kubernetes orchestration, and automated CI/CD.
 
